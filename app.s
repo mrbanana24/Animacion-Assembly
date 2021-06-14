@@ -72,19 +72,15 @@ pintar_marcador_2:
 	mov x11, 5
 	bl square
 
-/* pintar_pelotita:
-	mov x11, 4       // Tamanio de los cuadrados en X
-	mov x8, 4        // Tamanio de los cuadrados en Y
-	bl square
-	b InfLoop */
-
 ///////////////////////////      ANIMACION   /////////////////////////////////////////
 
 set_variables_pong:
 	ldr x5, =0x7D064	// Guardo la direccion del pong naranja
 	ldr x6, =0x7D99C  	// Guardo la direccion del pong AZUL manito
+	ldr x17, =0x96088 	// Guardo la direccion de la pelota
 	mov x13, 100		// Cantidad de pixeles que voy a bajar
 	mov x16, 100    	// Cantidad de pixeles que voy a bajar AZUUUULLL
+	mov x18, 700       // Cantidad de veces que me muevo a derecha
 	mov x0, x20			// Guardo la direccion base del framebuffer
 
 decidir_direccion_pong_1:
@@ -107,6 +103,28 @@ decidir_direccion_pong_2:
 	bgt loop_up_pong_2
 	b set_variables_pong
 
+decidir_direccion_pelota:
+	sub x18, x18, 1			// Resto cantidad de pixeles que me quedan por bajar
+	
+	// Entre 600 y 700
+	cmp x18, 600				// Comparo x13 con 0
+	bgt loop_right_pelota		// Si es mayor a cero voy para arriba
+
+	// Entre 550 y 600
+	cmp x18, 550				// Comparo x13 con 0
+	bgt loop_UP_pelota		// Si es mayor a cero voy para arriba
+
+	// Entre 300 y 550
+	cmp x18, 300				// Comparo x13 con 0
+	bgt loop_right_pelota		// Si es mayor a cero voy para arriba
+
+	cmp x18, -200			// comparo para saber si baje 200 pixeles
+	bgt loop_left_pelota		// Si x13 es mayor subo 100 pixeles
+	cmp x18, -300			// comparo para saber si baje 200 pixeles
+	bgt loop_right_pelota
+	b set_variables_pong
+
+
 loop_down_pong_1:
 	add x5, x5, 2560		// Bajo el pong
 	b animacion_pong_1
@@ -122,6 +140,18 @@ loop_down_pong_2:
 loop_up_pong_2:				// Sube el pong
 	sub x6, x6, 2560
 	b animacion_pong_2
+
+loop_right_pelota:
+	add x17, x17, 8			// Se mueve la pelota a la derecha
+	b animacion_pelota
+
+loop_UP_pelota:
+	sub x17, x17, 2560			// Se mueve la pelota a la derecha
+	b animacion_pelota
+
+loop_left_pelota:				// Se mueve la pelota a la
+	sub x17, x17, 8
+	b animacion_pelota
 
 animacion_pong_1:
 	movz w10, 0xFF, lsl 16		// Set color naranja
@@ -154,13 +184,26 @@ animacion_pong_2:
 	bl square
 	ldr x5, [sp]
 	add sp, sp, #8
+	b decidir_direccion_pelota
+
+animacion_pelota:
+	movz w10, 0xFF, lsl 16		// Set color BLANCOWW
+	movk w10, 0xFFFF, lsl 00
+	mov x8, 8       			// Tamanio de los cuadrados en Y
+	mov x11, 8	   				// Tamanio de los cuadrados en X
+	sub sp, sp, #8
+	str x5, [sp]
+	mov x5, x17
+	bl square
+	bl delay
+	movz w10, 0x00, lsl 16		// Set color negro
+	movk w10, 0x0000, lsl 00
+	mov x8, 8       			// Tamanio de los cuadrados en Y
+	mov x11, 8	   				// Tamanio de los cuadrados en X
+	bl square
+	ldr x5, [sp]
+	add sp, sp, #8
 	b decidir_direccion_pong_1
-
-
-
-
-
-	
 
 
 //////////////////////////////////  FUNCIONES  //////////////////////////////////
@@ -181,7 +224,7 @@ square_2:
 	br x30
 
 delay:
-	movz x14,0x02F, lsl 16
+	movz x14,0x0011, lsl 16
 	movk x14,0xFFFF, lsl 00
 
 loop_delay:
