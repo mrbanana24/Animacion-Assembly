@@ -47,14 +47,6 @@ loop_x5:
 	cbnz x14, loop_x5
 	cbnz x15, pintar_cuadrado
 
-pintar_pong_2:
-	movz w10, 0x02, lsl 16		// Set color azul
-	movk w10, 0x4a86, lsl 00
-	ldr x5, =0x7D99C
-	mov x8, 60       // Tamanio de los cuadrados en Y
-	mov x11, 7       // Tamanio de los cuadrados en X
-	bl square
-
  pintar_marcador_1:
 	movz w10, 0xFF, lsl 16		// Set color azul
 	movk w10, 0xFFFF, lsl 00
@@ -88,26 +80,48 @@ pintar_marcador_2:
 
 ///////////////////////////      ANIMACION   /////////////////////////////////////////
 
-set_variables:
-	ldr x5, =0x7D064
-	mov x13, 100
-	mov x0, x20
+set_variables_pong:
+	ldr x5, =0x7D064	// Guardo la direccion del pong naranja
+	ldr x6, =0x7D99C  	// Guardo la direccion del pong AZUL manito
+	mov x13, 100		// Cantidad de pixeles que voy a bajar
+	mov x16, 100    	// Cantidad de pixeles que voy a bajar AZUUUULLL
+	mov x0, x20			// Guardo la direccion base del framebuffer
 
-decidir_direccion:
-	sub x13, x13, 1
-	cmp x13, 0
-	bgt animacion_loop_down
-	cmp x13, -200
-	bgt animacion_loop_up
-	b set_variables
+decidir_direccion_pong_1:
+	sub x13, x13, 1			// Resto cantidad de pixeles que me quedan por bajar
+	cmp x13, 0				// Comparo x13 con 0
+	bgt loop_down_pong_1	// Si es mayor a cero voy para arriba
+	cmp x13, -200			// comparo para saber si baje 200 pixeles
+	bgt loop_up_pong_1		// Si x13 es mayor subo 100 pixeles
+	cmp x13, -300			// comparo para saber si baje 200 pixeles
+	bgt loop_down_pong_1
+	b set_variables_pong
 
-animacion_loop_down:
-	add x5, x5, 2560
+decidir_direccion_pong_2:
+	sub x16, x16, 1			// Resto cantidad de pixeles que me quedan por bajar
+	cmp x16, 0				// Comparo x13 con 0
+	bgt loop_up_pong_2	// Si es mayor a cero voy para arriba
+	cmp x16, -200			// comparo para saber si baje 200 pixeles
+	bgt loop_down_pong_2		// Si x13 es mayor subo 100 pixeles
+	cmp x16, -300			// comparo para saber si baje 200 pixeles
+	bgt loop_up_pong_2
+	b set_variables_pong
+
+loop_down_pong_1:
+	add x5, x5, 2560		// Bajo el pong
 	b animacion_pong_1
 
-animacion_loop_up:
+loop_up_pong_1:				// Sube el pong
 	sub x5, x5, 2560
 	b animacion_pong_1
+
+loop_down_pong_2:
+	add x6, x6, 2560		// Bajo el pong
+	b animacion_pong_2
+
+loop_up_pong_2:				// Sube el pong
+	sub x6, x6, 2560
+	b animacion_pong_2
 
 animacion_pong_1:
 	movz w10, 0xFF, lsl 16		// Set color naranja
@@ -121,7 +135,33 @@ animacion_pong_1:
 	mov x8, 60       			// Tamanio de los cuadrados en Y
 	mov x11, 7	   				// Tamanio de los cuadrados en X
 	bl square
-	b decidir_direccion
+	b decidir_direccion_pong_2
+
+animacion_pong_2:
+	movz w10, 0x02, lsl 16		// Set color azullllllllllllllll
+	movk w10, 0x4a86, lsl 00
+	mov x8, 60       			// Tamanio de los cuadrados en Y
+	mov x11, 7	   				// Tamanio de los cuadrados en X
+	sub sp, sp, #8
+	str x5, [sp]
+	mov x5, x6
+	bl square
+	bl delay
+	movz w10, 0x00, lsl 16		// Set color negro
+	movk w10, 0x0000, lsl 00
+	mov x8, 60       			// Tamanio de los cuadrados en Y
+	mov x11, 7	   				// Tamanio de los cuadrados en X
+	bl square
+	ldr x5, [sp]
+	add sp, sp, #8
+	b decidir_direccion_pong_1
+
+
+
+
+
+	
+
 
 //////////////////////////////////  FUNCIONES  //////////////////////////////////
 
@@ -140,16 +180,14 @@ square_2:
 	mov x0, x20
 	br x30
 
-
 delay:
-    movz x14,0x002F, lsl 16
-    movk x14,0xFFFF, lsl 00
+	movz x14,0x02F, lsl 16
+	movk x14,0xFFFF, lsl 00
 
 loop_delay:
-    sub x14,x14,1
-    cbnz x14,loop_delay
-    br x30
-
+	sub x14,x14,1
+	cbnz x14,loop_delay
+	br x30
 
 	//--------------------------------------------------------------
 	// Infinite Loop
