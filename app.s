@@ -6,6 +6,7 @@
 main:
 	// X0 contiene la direccion base del framebuffer
  	mov x20, x0	// Save framebuffer base address to x20
+	adr x21, bufferSecundario
 	//---------------- CODE HERE ------------------------------------
 
 	movz w10, 0x00, lsl 16
@@ -31,7 +32,8 @@ loop0:
 
 cantidad_cuadrados: 	// Cantidad de lineas que divide la cancha
 	mov x15, 12
-	ldr x5, =0x04E0
+	movz x5, 0x00, lsl 16
+	movk x5, 0x04E0, lsl 00
 
 pintar_cuadrado:
 	mov x8, 32       // Tamanio de los cuadrados en Y
@@ -49,11 +51,13 @@ loop_x5:
  pintar_marcador_1:
 	movz w10, 0xFF, lsl 16		// Set color azul
 	movk w10, 0xFFFF, lsl 00
-	ldr x5, =0x6680
+	movz x5, 0x00, lsl 16
+	movk x5, 0x6680, lsl 00
 	mov x8, 45
 	mov x11, 5
 	bl square
-	ldr x5, =0x6608
+	movz x5, 0x00
+	movk x5, 0x6608
 	mov x8, 5
 	mov x11, 30
 	bl square
@@ -61,11 +65,13 @@ loop_x5:
 pintar_marcador_2:
 	movz w10, 0xFF, lsl 16		// Set color blanco
 	movk w10, 0xFFFF, lsl 00
-	ldr x5, =0x6B80
+	movz x5, 0x00, lsl 16
+	movk x5, 0x6B80, lsl 00
 	mov x8, 45
 	mov x11, 5
 	bl square
-	ldr x5,=0x6BD0
+	movz x5, 0x00, lsl 16
+	movk x5, 0x6BD0, lsl 00
 	mov x8, 45
 	mov x11, 5
 	bl square
@@ -73,14 +79,17 @@ pintar_marcador_2:
 ///////////////////////////      ANIMACION   /////////////////////////////////////////
 
 set_variables_pong:
-	ldr x5, =0x70864	// Guardo la direccion del pong naranja
-	ldr x6, =0x9699C  	// Guardo la direccion del pong AZUL
+	movz x5, 0x07, lsl 16	// Guardo la direccion del pong naranja
+	movk x5, 0x0864, lsl 00
+	movz x6, 0x09, lsl 16  	// Guardo la direccion del pong AZUL
+	movk x6, 0x699C, lsl 00
 	mov x13, 100		// Cantidad de pixeles que voy a bajar
 	mov x16, 150    	// Cantidad de pixeles que voy a bajar AZUUUULLL
 	mov x0, x20			// Guardo la direccion base del framebuffer
 
 set_pelota:
-	ldr x17, =0x96088 	// Guardo la direccion de la pelota
+	movz x17, 0x09, lsl 16 	// Guardo la direccion de la pelota
+	movk x17, 0x6088, lsl 00
 	mov x18, 73	    	//
 	mov x19, 140      	//
 
@@ -173,7 +182,7 @@ animacion_pong_2:
 	mov x8, 60       			// Tamanio de los cuadrados en Y
 	mov x11, 7	   				// Tamanio de los cuadrados en X
 	sub sp, sp, #8
-	str x5, [sp]
+	stur x5, [sp]
 	mov x5, x6
 	bl square
 	bl delay
@@ -182,7 +191,7 @@ animacion_pong_2:
 	mov x8, 60       			// Tamanio de los cuadrados en Y
 	mov x11, 7	   				// Tamanio de los cuadrados en X
 	bl square
-	ldr x5, [sp]
+	ldur x5, [sp]
 	add sp, sp, #8
 	b decidir_direccion_pong_1
 
@@ -192,7 +201,7 @@ animacion_pelota:
 	mov x8, 8       			// Tamanio de los cuadrados en Y
 	mov x11, 8	   				// Tamanio de los cuadrados en X
 	sub sp, sp, #8
-	str x5, [sp]
+	stur x5, [sp]
 	mov x5, x17
 	bl square
 	bl delay
@@ -201,7 +210,7 @@ animacion_pelota:
 	mov x8, 8       			// Tamanio de los cuadrados en Y
 	mov x11, 8	   				// Tamanio de los cuadrados en X
 	bl square
-	ldr x5, [sp]
+	ldur x5, [sp]
 	add sp, sp, #8
 	b decidir_direccion_pong_2
 
@@ -236,3 +245,7 @@ loop_delay:
 	// Infinite Loop
 InfLoop:
 	b InfLoop
+
+.equ BYTES_FRAMEBUFFER, SCREEN_WIDTH * SCREEN_HEIGH * 8
+	bufferSecundario: .skip BYTES_FRAMEBUFFER
+
