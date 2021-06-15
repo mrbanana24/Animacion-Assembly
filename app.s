@@ -26,55 +26,6 @@ loop0:
 	cbnz x2,loop1	   // if not last row, jump
 	mov x0, x20
 
-///////////////////////////////////////////////////////////////////////////////////////
-	movz w10, 0xFF, lsl 16		// Set color blanco
-	movk w10, 0xFFFF, lsl 00
-
-cantidad_cuadrados: 	// Cantidad de lineas que divide la cancha
-	mov x15, 12
-	movz x5, 0x00, lsl 16
-	movk x5, 0x04E0, lsl 00
-
-pintar_cuadrado:
-	mov x8, 32       // Tamanio de los cuadrados en Y
-	mov x11, 4	   // Tamanio de los cuadrados en X
-	bl square
-	sub x15, x15, 1
-	mov x14, 40
-
-loop_x5:
-	add x5, x5, 2560
-	sub x14, x14, 1
-	cbnz x14, loop_x5
-	cbnz x15, pintar_cuadrado
-
- pintar_marcador_1:
-	movz w10, 0xFF, lsl 16		// Set color azul
-	movk w10, 0xFFFF, lsl 00
-	movz x5, 0x00, lsl 16
-	movk x5, 0x6680, lsl 00
-	mov x8, 45
-	mov x11, 5
-	bl square
-	movz x5, 0x00
-	movk x5, 0x6608
-	mov x8, 5
-	mov x11, 30
-	bl square
-
-pintar_marcador_2:
-	movz w10, 0xFF, lsl 16		// Set color blanco
-	movk w10, 0xFFFF, lsl 00
-	movz x5, 0x00, lsl 16
-	movk x5, 0x6B80, lsl 00
-	mov x8, 45
-	mov x11, 5
-	bl square
-	movz x5, 0x00, lsl 16
-	movk x5, 0x6BD0, lsl 00
-	mov x8, 45
-	mov x11, 5
-	bl square
 
 ///////////////////////////      ANIMACION   /////////////////////////////////////////
 
@@ -181,8 +132,8 @@ animacion_pong_2:
 	bl square
 	ldur x5, [sp]
 	add sp, sp, #8
-	/* b pintar_cuadrado  */
-	b copy
+	b pintar_cancha
+	// b copy
 
 animacion_pelota:
 	movz w10, 0xFF, lsl 16		// Set color BLANCOWW
@@ -196,6 +147,65 @@ animacion_pelota:
 	ldur x5, [sp]
 	add sp, sp, #8
 	b decidir_direccion_pong_2
+
+
+pintar_cancha: 	// Cantidad de lineas que divide la cancha
+	movz w10, 0xFF, lsl 16		// Set color blanco
+	movk w10, 0xFFFF, lsl 00
+	mov x15, 12					 // Cantidad de veces que pinto un cuadrado
+
+	// Guardo al stack las posiciones de la pelota / el pong / lo que toque
+	sub sp, sp, #8
+	stur x5, [sp]
+	movz x5, 0x00, lsl 16
+	movk x5, 0x04E0, lsl 00
+
+pintar_cuadrado:
+	mov x8, 32       // Tamanio de los cuadrados en Y
+	mov x11, 4	   // Tamanio de los cuadrados en X
+	bl square
+	sub x15, x15, 1
+	mov x14, 40		// Cantidad de veces que llamo a loop_x5
+
+loop_x5:
+	add x5, x5, 2560
+	sub x14, x14, 1
+	cbnz x14, loop_x5
+	cbnz x15, pintar_cuadrado
+
+ pintar_marcador_1:
+	movz w10, 0xFF, lsl 16		// Set color blanco
+	movk w10, 0xFFFF, lsl 00
+	movz x5, 0x00, lsl 16
+	movk x5, 0x6680, lsl 00
+	mov x8, 45
+	mov x11, 5
+	bl square
+	movz x5, 0x00
+	movk x5, 0x6608
+	mov x8, 5
+	mov x11, 30
+	bl square
+
+pintar_marcador_2:
+	movz w10, 0xFF, lsl 16		// Set color blanco
+	movk w10, 0xFFFF, lsl 00
+	movz x5, 0x00, lsl 16
+	movk x5, 0x6B80, lsl 00
+	mov x8, 45
+	mov x11, 5
+	bl square
+	movz x5, 0x00, lsl 16
+	movk x5, 0x6BD0, lsl 00
+	mov x8, 45
+	mov x11, 5
+	bl square
+
+	// Recuperar las posiciones de la pelota / el pong / lo que toque
+	ldur x5, [sp]
+	add sp, sp, #8
+
+	b copy
 
 //////////////////////////////////  FUNCIONES  //////////////////////////////////
 
