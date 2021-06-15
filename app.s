@@ -7,12 +7,12 @@ main:
 	// X0 contiene la direccion base del framebuffer
  	mov x20, x0	// Save framebuffer base address to x20
 	adr x21, bufferSecundario
+	mov x22, x21
+
 	//---------------- CODE HERE ------------------------------------
 
 	movz w10, 0x00, lsl 16
 	movk w10, 0x0000, lsl 00
-
-	mov x3, 4                    // En x3 guardamos el tamanio de "un pixel"
 
 	mov x2, SCREEN_HEIGH         // Y Size
 loop1:
@@ -168,12 +168,6 @@ animacion_pong_1:
 	mov x8, 60       			// Tamanio de los cuadrados en Y
 	mov x11, 7	   				// Tamanio de los cuadrados en X
 	bl square
-	bl delay
-	movz w10, 0x00, lsl 16		// Set color negro
-	movk w10, 0x0000, lsl 00
-	mov x8, 60       			// Tamanio de los cuadrados en Y
-	mov x11, 7	   				// Tamanio de los cuadrados en X
-	bl square
 	b decidir_mov_pelota
 
 animacion_pong_2:
@@ -185,15 +179,10 @@ animacion_pong_2:
 	stur x5, [sp]
 	mov x5, x6
 	bl square
-	bl delay
-	movz w10, 0x00, lsl 16		// Set color negro
-	movk w10, 0x0000, lsl 00
-	mov x8, 60       			// Tamanio de los cuadrados en Y
-	mov x11, 7	   				// Tamanio de los cuadrados en X
-	bl square
 	ldur x5, [sp]
 	add sp, sp, #8
-	b decidir_direccion_pong_1
+	/* b pintar_cuadrado  */
+	b copy
 
 animacion_pelota:
 	movz w10, 0xFF, lsl 16		// Set color BLANCOWW
@@ -204,36 +193,58 @@ animacion_pelota:
 	stur x5, [sp]
 	mov x5, x17
 	bl square
-	bl delay
-	movz w10, 0x00, lsl 16		// Set color negro
-	movk w10, 0x0000, lsl 00
-	mov x8, 8       			// Tamanio de los cuadrados en Y
-	mov x11, 8	   				// Tamanio de los cuadrados en X
-	bl square
 	ldur x5, [sp]
 	add sp, sp, #8
 	b decidir_direccion_pong_2
-
 
 //////////////////////////////////  FUNCIONES  //////////////////////////////////
 
 square:
 	mov x4, x5
-	add x4, x4, x0				//Guardo la dirrecion en el framebuffer
+	add x4, x4, x21				//Guardo la dirrecion en el framebuffer
 	mov x7, x11	        		// Reseteo el X
 square_2:
 	stur w10, [x4]		 	 // Set el color en el pixel
 	add x4, x4, 4			 // Paso al siguiente pixel
 	sub x7, x7, 1			 // Resto cantidad de pixeles que me quedan por pintar
 	cbnz x7, square_2		// "if(x7 != 0) voy a square_2 para seguir pintando"
-	add x0, x0, 2560	  	// Paso al pixel de abajo
+	add x21, x21, 2560	  	// Paso al pixel de abajo
 	sub x8, x8, 1				// Resto cantidad de pixeles que me queadn por pintar en Y
 	cbnz x8, square			// "if(x9 != 0) voy a square para seguir pintando"
-	mov x0, x20
+	mov x21, x22
 	br x30
 
+
+copy:
+	bl delay
+	movz x4, 0x25, lsl 16
+	movk x4,0x8000, lsl 00
+copy_buffer_2:
+	ldur x3, [x21]
+	stur x3, [x0]
+	add x21, x21, 4
+	add x0, x0, 4
+	sub x4, x4, 1
+	cbnz x4, copy_buffer_2
+	mov x0, x20
+	mov x21, x22
+
+reset_buffer:
+	movz x4, 0x25, lsl 16
+	movk x4,0x8000, lsl 00
+reset_buffer_2:
+	movz x3, 0x00, lsl 16
+	movk x3,0x0000, lsl 00
+	stur x3, [x21]
+	add x21, x21, 4
+	sub x4, x4, 1
+	cbnz x4, reset_buffer_2
+	mov x21, x22
+	b decidir_direccion_pong_1
+
+
 delay:
-	movz x14,0x003F, lsl 16
+	movz x14,0x002F, lsl 16
 	movk x14,0xFFFF, lsl 00
 
 loop_delay:
